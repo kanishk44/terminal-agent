@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
+import { exec } from "node:child_process";
 import { createTwoFilesPatch } from "diff";
 import chalk from "chalk";
 import { config } from "./config.js";
@@ -152,6 +153,38 @@ export async function editFile(args: {
   return `Edited ${args.path}`;
 }
 
+export async function executeCommand(args: {
+  command: string;
+  timeout_ms?: number;
+}): Promise<string> {
+  console.log(chalk.bold(`\nProposed command:`));
+  console.log(chalk.yellow(`  $ ${args.command}`));
+  if (config.safeMode) {
+    const approved = await askYesNo("Run this command?");
+    if (!approved) return "User rejected the command. It was not run.";
+  }
+
+  const timeout = args.timeout_ms ?? 30_000;
+  return new Promise((resolve) => {
+    exec(
+      args.command,
+      { cwd: ROOT, timeout, maxBuffer: 1024 * 1024 },
+      (error, stdout, stderr) => {
+        const MAX = 10000;
+        const clip = (s: string) =>
+          s.length > MAX ? s.slice(0, MAX) + `\n... [truncated]` : s;
+        const parts = [
+          `exit code: ${error ? error.code ?? 1 : 0}`,
+          stdout ? `stdout:\n${clip(stdout)}` : "",
+          stderr ? `stderr:\n${clip(stderr)}` : "",
+          error?.killed ? `(command timed out after ${timeout}ms)` : "",
+        ].filter(Boolean);
+        resolve(parts.join("\n\n"));
+      }
+    );
+  });
+}
+
 export const toolImplementations: Record<
   string,
   (args: any) => Promise<string>
@@ -160,6 +193,7 @@ export const toolImplementations: Record<
   list_files: listFiles,
   write_file: writeFile,
   edit_file: editFile,
+  execute_command: executeCommand,
 };
 
 export const toolSchemas = [
@@ -227,6 +261,25 @@ export const toolSchemas = [
           new_string: { type: "string", description: "Text to replace it with." },
         },
         required: ["path", "old_string", "new_string"],
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "execute_command",
+      description:
+        "Run a shell command in the project directory (e.g. running tests, installing packages, git commands). Asks for confirmation in safe mode. Returns exit code, stdout, and stderr.",
+      parameters: {
+        type: "object",
+        properties: {
+          command: { type: "string", description: "The shell command to run." },
+          timeout_ms: {
+            type: "number",
+            description: "Max time to allow the command to run, in milliseconds. Defaults to 30000.",
+          },
+        },
+        required: ["command"],
       },
     },
   },

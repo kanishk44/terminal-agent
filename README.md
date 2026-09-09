@@ -33,6 +33,7 @@ npm start
 - `list_files(path?, recursive?)` — list a directory
 - `write_file(path, content)` — create/overwrite a file (diff preview + confirm)
 - `edit_file(path, old_string, new_string)` — replace a unique substring in a file (diff preview + confirm)
+- `execute_command(command, timeout_ms?)` — run a shell command in the project dir (confirm in safe mode; returns exit code/stdout/stderr, 30s default timeout)
 
 ## Config (env vars / `.env`)
 

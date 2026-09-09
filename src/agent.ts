@@ -5,9 +5,10 @@ import { toolImplementations, toolSchemas } from "./tools.js";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
 const SYSTEM_PROMPT = `You are a terminal-based AI coding agent running inside a user's project directory.
-You can read files, list directories, write new files, and edit existing files using the tools provided.
+You can read files, list directories, write new files, edit existing files, and run shell commands using the tools provided.
 Always call read_file before edit_file so your old_string matches exactly.
 Prefer small, targeted edit_file calls over rewriting whole files with write_file.
+Use execute_command to run tests, builds, linters, or package managers when it helps verify your work, but avoid destructive or irreversible commands.
 Explain what you are about to do briefly, then use tools to do it. After tool results come back, continue until the task is complete, then give a concise final summary.`;
 
 export class Agent {
