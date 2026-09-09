@@ -28,6 +28,7 @@ export class Agent {
       apiKey: config.apiKey,
       baseURL: config.baseURL,
       defaultHeaders,
+      maxRetries: config.maxRetries,
     });
   }
 

@@ -1,8 +1,23 @@
 #!/usr/bin/env node
 import readline from "node:readline";
 import chalk from "chalk";
+import OpenAI from "openai";
 import { config, requireApiKey } from "./config.js";
 import { Agent } from "./agent.js";
+
+function describeError(err: unknown): string {
+  if (err instanceof OpenAI.RateLimitError) {
+    const hint =
+      config.provider === "openrouter"
+        ? `Model "${config.model}" is rate-limited (common on free ":free" OpenRouter models under shared load). Try again shortly, switch MODEL to a non-free model or another provider, or add your own upstream key at https://openrouter.ai/settings/integrations.`
+        : `Rate-limited by ${config.provider}. Try again shortly.`;
+    return `429 rate limited — ${hint}`;
+  }
+  if (err instanceof OpenAI.APIError) {
+    return `${err.status ?? ""} ${err.message}`.trim();
+  }
+  return err instanceof Error ? err.message : String(err);
+}
 
 async function main() {
   requireApiKey();
@@ -38,7 +53,7 @@ async function main() {
     try {
       await agent.run(input);
     } catch (err) {
-      console.error(chalk.red(`Error: ${err instanceof Error ? err.message : String(err)}`));
+      console.error(chalk.red(`Error: ${describeError(err)}`));
     }
     rl.prompt();
   });
