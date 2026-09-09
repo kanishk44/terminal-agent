@@ -18,9 +18,16 @@ export class Agent {
   ];
 
   constructor() {
+    const defaultHeaders: Record<string, string> = {};
+    if (config.provider === "openrouter") {
+      if (config.openrouterSiteUrl) defaultHeaders["HTTP-Referer"] = config.openrouterSiteUrl;
+      if (config.openrouterAppName) defaultHeaders["X-Title"] = config.openrouterAppName;
+    }
+
     this.client = new OpenAI({
       apiKey: config.apiKey,
       baseURL: config.baseURL,
+      defaultHeaders,
     });
   }
 

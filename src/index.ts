@@ -8,7 +8,11 @@ async function main() {
   requireApiKey();
 
   console.log(chalk.bold.magenta("Terminal Agent"));
-  console.log(chalk.dim(`model: ${config.model} | safe mode: ${config.safeMode ? "on" : "off"}`));
+  console.log(
+    chalk.dim(
+      `provider: ${config.provider} | model: ${config.model} | safe mode: ${config.safeMode ? "on" : "off"}`
+    )
+  );
   console.log(chalk.dim("Type your request, or 'exit' to quit.\n"));
 
   const agent = new Agent();
