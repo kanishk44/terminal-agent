@@ -25,7 +25,12 @@ const PROVIDER_DEFAULTS: Record<string, ProviderDefaults> = {
 };
 
 const provider = (process.env.PROVIDER ?? "deepseek").toLowerCase();
-const defaults = PROVIDER_DEFAULTS[provider] ?? PROVIDER_DEFAULTS.deepseek;
+const defaults = PROVIDER_DEFAULTS[provider];
+if (!defaults) {
+  const known = Object.keys(PROVIDER_DEFAULTS).join(", ");
+  console.error(`Unknown PROVIDER "${provider}". Supported values: ${known}.`);
+  process.exit(1);
+}
 const prefix = provider.toUpperCase();
 
 export const config = {
